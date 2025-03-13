@@ -5,6 +5,8 @@ spring:
     user:
       name: ${SECURITY_USER_NAME}
       password: ${SECURITY_USER_PASSWORD}
+  profiles:
+    active: local
 
 server:
   port: 8761
