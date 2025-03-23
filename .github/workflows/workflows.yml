@@ -5,8 +5,9 @@ on:
     branches:
       - main
       - develop
-    paths:
-      - 'discovery-service/**'
+  pull_request:
+    branches:
+      - develop
 
 jobs:
   build-and-deploy:
