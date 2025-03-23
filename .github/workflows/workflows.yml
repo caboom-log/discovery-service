@@ -56,5 +56,5 @@ jobs:
           
             echo "==> Restarting discovery-service..."
             cd /caboomlog
-            sudo docker-compose --env-file ~/discovery-service/.env restart discovery-service
+            sudo docker-compose --env-file ./discovery-service/.env restart discovery-service
 
