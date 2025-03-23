@@ -5,6 +5,9 @@ on:
     branches:
       - main
       - develop
+  pull_request:
+    branches:
+      - develop
     paths:
       - 'discovery-service/**'
 
@@ -27,7 +30,7 @@ jobs:
           cd discovery-service
           ./mvnw clean package -DskipTests
 
-      - name: Copy to Server and Deploy
+      - name: Deploy to Server
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -35,20 +38,25 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
+            echo "==> Removing old container and image..."
+            sudo docker stop discovery-service || true
+            sudo docker rm discovery-service || true
+            sudo docker rmi caboomlog-discovery-service || true
+
             echo "==> Removing old files..."
             sudo rm -rf ~/discovery-service
 
             echo "==> Cloning repository..."
-            sudo git clone https://github.com/caboom-log/discovery-service.git ~/discovery-service
+            git clone https://github.com/caboom-log/discovery-service.git ~/discovery-service
 
             cd ~/discovery-service
             echo "==> Building discovery service..."
             ./mvnw clean package -DskipTests
-            
+
             echo "==> Building Docker image..."
             sudo docker build --build-arg SECURITY_USER_NAME=${{ secrets.SECURITY_USER_NAME }} \
                               --build-arg SECURITY_USER_PASSWORD=${{ secrets.SECURITY_USER_PASSWORD }} \
                               -t caboomlog-discovery-service:latest .
 
-            echo "==> Restarting discovery-service..."
-            sudo docker-compose restart discovery-service
+            echo "==> Running discovery-service container..."
+            sudo docker run -d --name discovery-service -p 8761:8761 --network app_network caboomlog-discovery-service
