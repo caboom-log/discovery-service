@@ -34,18 +34,28 @@ jobs:
           script: |
             echo "==> Removing old files..."
             sudo rm -rf ~/discovery-service
-
+          
+            echo "==> Creating discovery-service directory..."
+            sudo mkdir -p ~/discovery-service
+            sudo chmod -R 777 ~/discovery-service
+          
             echo "==> Cloning repository..."
             sudo git clone https://github.com/caboom-log/discovery-service.git ~/discovery-service
-
+          
             cd ~/discovery-service
-            echo "==> Building discovery service..."
-            ./mvnw clean package -DskipTests
             
+            echo "==> Preparing target directory..."
+            sudo mkdir -p target/classes
+            sudo chmod -R 777 target
+          
+            echo "==> Building discovery service..."
+            sudo ./mvnw clean package -DskipTests
+          
             echo "==> Building Docker image..."
             sudo docker build --build-arg SECURITY_USER_NAME=${{ secrets.SECURITY_USER_NAME }} \
                               --build-arg SECURITY_USER_PASSWORD=${{ secrets.SECURITY_USER_PASSWORD }} \
                               -t caboomlog-discovery-service:latest .
-
+          
             echo "==> Restarting discovery-service..."
             sudo docker-compose restart discovery-service
+
