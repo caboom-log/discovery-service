@@ -53,9 +53,10 @@ jobs:
             ./mvnw clean package -DskipTests
 
             echo "==> Building Docker image..."
-            sudo docker build --build-arg SECURITY_USER_NAME=${{ secrets.SECURITY_USER_NAME }} \
-                              --build-arg SECURITY_USER_PASSWORD=${{ secrets.SECURITY_USER_PASSWORD }} \
-                              -t caboomlog-discovery-service:latest .
+            sudo docker build \
+              --env SECURITY_USER_NAME=${{ secrets.SECURITY_USER_NAME }} \
+              --env SECURITY_USER_PASSWORD=${{ secrets.SECURITY_USER_PASSWORD }} \
+              -t caboomlog-discovery-service:latest .
 
             echo "==> Running discovery-service container..."
             sudo docker run -d --name discovery-service -p 8761:8761 --network app_network caboomlog-discovery-service
