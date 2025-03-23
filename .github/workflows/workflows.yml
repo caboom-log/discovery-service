@@ -1,0 +1,54 @@
+name: discovery-service ci/cd
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'discovery-service/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Build with Maven
+        run: |
+          cd discovery-service
+          ./mvnw clean package -DskipTests
+
+      - name: Copy to Server and Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            echo "==> Removing old files..."
+            sudo rm -rf ~/discovery-service
+
+            echo "==> Cloning repository..."
+            sudo git clone https://github.com/caboom-log/discovery-service.git ~/discovery-service
+
+            cd ~/discovery-service
+            echo "==> Building discovery service..."
+            ./mvnw clean package -DskipTests
+            
+            echo "==> Building Docker image..."
+            sudo docker build --build-arg SECURITY_USER_NAME=${{ secrets.SECURITY_USER_NAME }} \
+                              --build-arg SECURITY_USER_PASSWORD=${{ secrets.SECURITY_USER_PASSWORD }} \
+                              -t caboomlog-discovery-service:latest .
+
+            echo "==> Restarting discovery-service..."
+            sudo docker-compose restart discovery-service
