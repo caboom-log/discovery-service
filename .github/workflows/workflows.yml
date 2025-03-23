@@ -52,11 +52,9 @@ jobs:
             sudo ./mvnw clean package -DskipTests
           
             echo "==> Building Docker image..."
-            sudo docker build --build-arg SECURITY_USER_NAME=${{ secrets.SECURITY_USER_NAME }} \
-                              --build-arg SECURITY_USER_PASSWORD=${{ secrets.SECURITY_USER_PASSWORD }} \
-                              -t caboomlog-discovery-service:latest .
+            sudo docker build -t caboomlog-discovery-service:latest .
           
             echo "==> Restarting discovery-service..."
             cd /caboomlog
-            sudo docker-compose restart discovery-service
+            sudo docker-compose --env-file ~/discovery-service/.env restart discovery-service
 
