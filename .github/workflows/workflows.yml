@@ -5,9 +5,8 @@ on:
     branches:
       - main
       - develop
-  pull_request:
-    branches:
-      - develop
+    paths:
+      - 'discovery-service/**'
 
 jobs:
   build-and-deploy:
@@ -25,7 +24,6 @@ jobs:
 
       - name: Build with Maven
         run: |
-          cd discovery-service
           ./mvnw clean package -DskipTests
 
       - name: Copy to Server and Deploy
