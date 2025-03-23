@@ -57,5 +57,6 @@ jobs:
                               -t caboomlog-discovery-service:latest .
           
             echo "==> Restarting discovery-service..."
+            cd /caboomlog
             sudo docker-compose restart discovery-service
 
