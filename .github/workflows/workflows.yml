@@ -27,7 +27,6 @@ jobs:
 
       - name: Build with Maven
         run: |
-          cd discovery-service
           ./mvnw clean package -DskipTests
 
       - name: Deploy to Server
