@@ -50,6 +50,8 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
+            cd /caboomlog
+            
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/caboomlog-discovery-service:latest
             
             docker compose stop discovery-service || true
