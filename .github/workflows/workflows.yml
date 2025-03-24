@@ -30,12 +30,12 @@ jobs:
             exit 1
             fi
             
-            - name: Fix permissions
-              run: |
+      - name: Fix permissions
+        run: |
                 chmod 644 ./src/main/resources/application.yml
             
-            - name: Replace variables in application.yml
-              run: |
+      - name: Replace variables in application.yml
+        run: |
                 sed -i.bak "s|\${SECURITY_USER_NAME}|\"${{ secrets.SECURITY_USER_NAME }}\"|g" ./src/main/resources/application.yml
                 sed -i.bak "s|\${SECURITY_USER_PASSWORD}|\"${{ secrets.SECURITY_USER_PASSWORD }}\"|g" ./src/main/resources/application.yml
 
