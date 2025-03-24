@@ -38,7 +38,7 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          IMAGE_NAME=${{ secrets.DOCKER_HUB_USERNAME }}/discovery-service:latest
+          IMAGE_NAME=${{ secrets.DOCKER_HUB_USERNAME }}/caboomlog-discovery-service:latest
           docker build -t $IMAGE_NAME .
           docker push $IMAGE_NAME
 
