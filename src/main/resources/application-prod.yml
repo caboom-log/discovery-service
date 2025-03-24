@@ -1,6 +1,0 @@
-eureka:
-  client:
-    register-with-eureka: false
-    fetch-registry: false
-    service-url:
-      defaultZone: http://${spring.security.user.name}:${spring.security.user.password}@0.0.0.0:${server.port}/eureka

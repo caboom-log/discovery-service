@@ -20,24 +20,14 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Check if application.yml exists
-        run: |
-            if [ -f ./src/main/resources/application.yml ]; then
-            echo "application.yml found"
-            cat ./src/main/resources/application.yml
-            else
-            echo "application.yml not found"
-            exit 1
-            fi
-            
-      - name: Fix permissions
-        run: |
-                chmod 644 ./src/main/resources/application.yml
-            
-      - name: Replace variables in application.yml
-        run: |
-          sed -i.bak "s|\\\${SECURITY_USER_NAME}|${{ secrets.SECURITY_USER_NAME }}|g" ./src/main/resources/application.yml
-          sed -i.bak "s|\\\${SECURITY_USER_PASSWORD}|${{ secrets.SECURITY_USER_PASSWORD }}|g" ./src/main/resources/application.yml
+      - name: Set application.yml file
+        uses: microsoft/variable-substitution@v1
+        with:
+          files: ./src/main/resources/application.yml
+        env:
+            spring.security.user.name: ${{ secrets.SECURITY_USER_NAME }}
+            spring.security.user.password: ${{ secrets.SECURITY_USER_PASSWORD }}
+            eureka.client.fetch-registry.service-url.defaultZone: ${{ secrets.EUREKA_CLIENT_DEFAULTZONE }}
 
       - name: Build with Maven
         run: |
@@ -62,10 +52,10 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             cd /caboomlog
-
+            
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/caboomlog-discovery-service:latest
-
+            
             docker compose stop discovery-service || true
             docker compose rm -f discovery-service || true
-
+            
             docker compose up -d discovery-service
