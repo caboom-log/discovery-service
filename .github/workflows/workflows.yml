@@ -38,34 +38,37 @@ jobs:
         run: |
                 sed -i.bak "s|\${SECURITY_USER_NAME}|\"${{ secrets.SECURITY_USER_NAME }}\"|g" ./src/main/resources/application.yml
                 sed -i.bak "s|\${SECURITY_USER_PASSWORD}|\"${{ secrets.SECURITY_USER_PASSWORD }}\"|g" ./src/main/resources/application.yml
-
-      - name: Build with Maven
+      - name: Check application.yml
         run: |
-          mvn clean package -Dspring.profiles.active=prod
+            cat ./src/main/resources/application.yml
 
-      - name: Log in to Docker Hub
-        run: |
-          echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
-
-      - name: Build and Push Docker Image
-        run: |
-          IMAGE_NAME=${{ secrets.DOCKER_HUB_USERNAME }}/caboomlog-discovery-service:latest
-          docker build -t $IMAGE_NAME .
-          docker push $IMAGE_NAME
-
-      - name: Deploy to Server via SSH
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          script: |
-            cd /caboomlog
-            
-            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/caboomlog-discovery-service:latest
-            
-            docker compose stop discovery-service || true
-            docker compose rm -f discovery-service || true
-            
-            docker compose up -d discovery-service
+#      - name: Build with Maven
+#        run: |
+#          mvn clean package -Dspring.profiles.active=prod
+#
+#      - name: Log in to Docker Hub
+#        run: |
+#          echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+#
+#      - name: Build and Push Docker Image
+#        run: |
+#          IMAGE_NAME=${{ secrets.DOCKER_HUB_USERNAME }}/caboomlog-discovery-service:latest
+#          docker build -t $IMAGE_NAME .
+#          docker push $IMAGE_NAME
+#
+#      - name: Deploy to Server via SSH
+#        uses: appleboy/ssh-action@master
+#        with:
+#          host: ${{ secrets.SSH_HOST }}
+#          username: ${{ secrets.SSH_USER }}
+#          key: ${{ secrets.SSH_KEY }}
+#          port: ${{ secrets.SSH_PORT }}
+#          script: |
+#            cd /caboomlog
+#
+#            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/caboomlog-discovery-service:latest
+#
+#            docker compose stop discovery-service || true
+#            docker compose rm -f discovery-service || true
+#
+#            docker compose up -d discovery-service
