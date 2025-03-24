@@ -20,41 +20,38 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
+      - name: Set application.yml file
+        uses: microsoft/variable-substitution@v1
+        with:
+          files: ./src/main/resources/application.yml
+        env:
+            spring.security.user.name: ${{ secrets.SECURITY_USER_NAME }}
+            spring.security.user.password: ${{ secrets.SECURITY_USER_PASSWORD }}
+
       - name: Build with Maven
         run: |
-          ./mvnw clean package -DskipTests
+          mvn clean package -Dspring.profiles.active=prod
 
-      - name: Copy to Server and Deploy
+      - name: Log in to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+
+      - name: Build and Push Docker Image
+        run: |
+          IMAGE_NAME=${{ secrets.DOCKER_HUB_USERNAME }}/discovery-service:latest
+          docker build -t $IMAGE_NAME .
+          docker push $IMAGE_NAME
+
+      - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT }}
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            echo "==> Removing old files..."
-            sudo rm -rf ~/discovery-service
-          
-            echo "==> Creating discovery-service directory..."
-            sudo mkdir -p ~/discovery-service
-            sudo chmod -R 777 ~/discovery-service
-          
-            echo "==> Cloning repository..."
-            sudo git clone https://github.com/caboom-log/discovery-service.git ~/discovery-service
-          
-            cd ~/discovery-service
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/caboomlog-discovery-service:latest
             
-            echo "==> Preparing target directory..."
-            sudo mkdir -p target/classes
-            sudo chmod -R 777 target
-          
-            echo "==> Building discovery service..."
-            sudo ./mvnw clean package -DskipTests
-          
-            echo "==> Building Docker image..."
-            sudo docker build -t caboomlog-discovery-service:latest .
-          
-            echo "==> Restarting discovery-service..."
-            cd /caboomlog
-            sudo docker-compose --env-file ./discovery-service/.env restart discovery-service
-
+            docker compose stop discovery-service || true
+            docker compose rm -f discovery-service || true
+            
+            docker compose up -d discovery-service
