@@ -20,10 +20,10 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Set application.yml file
+      - name: Set application-prod.properties file
         uses: microsoft/variable-substitution@v1
         with:
-          files: ./src/main/resources/application.yml
+          files: ./src/main/resources/application-prod.properties
         env:
             spring.security.user.name: ${{ secrets.SECURITY_USER_NAME }}
             spring.security.user.password: ${{ secrets.SECURITY_USER_PASSWORD }}
