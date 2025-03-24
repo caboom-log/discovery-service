@@ -20,13 +20,10 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Set application.yml file
-        uses: microsoft/variable-substitution@v1
-        with:
-          files: ./src/main/resources/application.yml
-        env:
-            spring.security.user.name: ${{ secrets.SECURITY_USER_NAME }}
-            spring.security.user.password: ${{ secrets.SECURITY_USER_PASSWORD }}
+      - name: Replace variables in application.yml
+        run: |
+          sed -i "s|\${SECURITY_USER_NAME}|${{ secrets.SECURITY_USER_NAME }}|g" ./src/main/resources/application.yml
+          sed -i "s|\${SECURITY_USER_PASSWORD}|${{ secrets.SECURITY_USER_PASSWORD }}|g" ./src/main/resources/application.yml
 
       - name: Build with Maven
         run: |
