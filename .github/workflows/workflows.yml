@@ -52,10 +52,11 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             cd /caboomlog
-            
-            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/caboomlog-discovery-service:latest
-            
+
             docker compose stop discovery-service || true
             docker compose rm -f discovery-service || true
+
+            docker rmi $(docker images '${{ secrets.DOCKER_HUB_USERNAME }}/caboomlog-discovery-service' -q)
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/caboomlog-discovery-service:latest
             
             docker compose up -d discovery-service
