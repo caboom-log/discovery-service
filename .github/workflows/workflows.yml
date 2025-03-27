@@ -27,7 +27,6 @@ jobs:
         env:
           spring.security.user.name: ${{ secrets.SECURITY_USER_NAME }}
           spring.security.user.password: ${{ secrets.SECURITY_USER_PASSWORD }}
-          eureka.client.fetch-registry.service-url.defaultZone: ${{ secrets.EUREKA_CLIENT_DEFAULTZONE }}
 
       - name: Build with Maven
         run: |
