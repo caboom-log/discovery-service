@@ -52,7 +52,7 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             cd /caboomlog
-            
+
             docker compose stop discovery-service || true
             docker compose rm -f discovery-service || true
 
