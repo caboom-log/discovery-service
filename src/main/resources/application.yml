@@ -1,6 +1,10 @@
 spring:
   application:
     name: discovery-service
+  security:
+    user:
+      name:
+      password:
 
 server:
   port: 8761
