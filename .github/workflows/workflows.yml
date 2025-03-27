@@ -20,10 +20,10 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Set application-prod.properties file
+      - name: Set application.yml file
         uses: microsoft/variable-substitution@v1
         with:
-          files: ./src/main/resources/application-prod.properties
+          files: ./src/main/resources/application.yml
         env:
             spring.security.user.name: ${{ secrets.SECURITY_USER_NAME }}
             spring.security.user.password: ${{ secrets.SECURITY_USER_PASSWORD }}
@@ -31,7 +31,7 @@ jobs:
 
       - name: Build with Maven
         run: |
-          mvn clean package -Dspring.profiles.active=prod
+          mvn clean package
 
       - name: Log in to Docker Hub
         run: |
@@ -52,10 +52,11 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             cd /caboomlog
-            
-            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/caboomlog-discovery-service:latest
-            
+
             docker compose stop discovery-service || true
             docker compose rm -f discovery-service || true
+
+            docker rmi $(docker images '${{ secrets.DOCKER_HUB_USERNAME }}/caboomlog-discovery-service' -q)
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/caboomlog-discovery-service:latest
             
             docker compose up -d discovery-service
