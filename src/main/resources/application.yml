@@ -1,8 +1,6 @@
 spring:
   application:
     name: discovery-service
-  profiles:
-    active: local
 
 server:
   port: 8761
@@ -13,4 +11,4 @@ eureka:
     register-with-eureka: false
     fetch-registry: false
     service-url:
-      defaultZone: http://${spring.security.user.name}:${spring.security.user.password}@3.19.218.120:${server.port}/eureka
+      defaultZone:
