@@ -5,8 +5,6 @@ on:
     branches:
       - main
       - develop
-    paths:
-      - 'discovery-service/**'
 
 jobs:
   build-and-deploy:
@@ -22,11 +20,30 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
+      - name: Set application.yml file
+        uses: microsoft/variable-substitution@v1
+        with:
+          files: ./src/main/resources/application.yml
+        env:
+            spring.security.user.name: ${{ secrets.SECURITY_USER_NAME }}
+            spring.security.user.password: ${{ secrets.SECURITY_USER_PASSWORD }}
+            eureka.client.fetch-registry.service-url.defaultZone: ${{ secrets.EUREKA_CLIENT_DEFAULTZONE }}
+
       - name: Build with Maven
         run: |
-          ./mvnw clean package -DskipTests
+          mvn clean package
 
-      - name: Copy to Server and Deploy
+      - name: Log in to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+
+      - name: Build and Push Docker Image
+        run: |
+          IMAGE_NAME=${{ secrets.DOCKER_HUB_USERNAME }}/caboomlog-discovery-service:latest
+          docker build -t $IMAGE_NAME .
+          docker push $IMAGE_NAME
+
+      - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -34,20 +51,12 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            echo "==> Removing old files..."
-            sudo rm -rf ~/discovery-service
-
-            echo "==> Cloning repository..."
-            sudo git clone https://github.com/caboom-log/discovery-service.git ~/discovery-service
-
-            cd ~/discovery-service
-            echo "==> Building discovery service..."
-            ./mvnw clean package -DskipTests
+            cd /caboomlog
             
-            echo "==> Building Docker image..."
-            sudo docker build --build-arg SECURITY_USER_NAME=${{ secrets.SECURITY_USER_NAME }} \
-                              --build-arg SECURITY_USER_PASSWORD=${{ secrets.SECURITY_USER_PASSWORD }} \
-                              -t caboomlog-discovery-service:latest .
+            docker compose stop discovery-service || true
+            docker compose rm -f discovery-service || true
 
-            echo "==> Restarting discovery-service..."
-            sudo docker-compose restart discovery-service
+            docker rmi $(docker images '${{ secrets.DOCKER_HUB_USERNAME }}/caboomlog-discovery-service' -q)
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/caboomlog-discovery-service:latest
+            
+            docker compose up -d discovery-service

@@ -3,10 +3,8 @@ spring:
     name: discovery-service
   security:
     user:
-      name: ${SECURITY_USER_NAME}
-      password: ${SECURITY_USER_PASSWORD}
-  profiles:
-    active: local
+      name:
+      password:
 
 server:
   port: 8761
